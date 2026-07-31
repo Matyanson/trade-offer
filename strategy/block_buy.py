@@ -51,6 +51,7 @@ class BlockBuy(Strategy):
                 time_in_force=TimeInForce.GTC
             )
         )
+        print(f"BlockBuy strategy {self.id} stop loss order placed: {self.stop_loss_order.id} at stop price: {self.filled_entry_price - self.stop_loss_distance}.")
     
     def cancel_stop_loss(self):
         if self.stop_loss_order is not None:
@@ -62,7 +63,7 @@ class BlockBuy(Strategy):
                 print(f"Error occurred while canceling stop loss order: {e}")
 
     def check_trailing_activation(self, quote: Quote):
-        price = quote.ask_price
+        price = quote.bid_price
         trail_start_price = self.filled_entry_price + self.trail_start_distance
 
         if price >= trail_start_price:
@@ -79,7 +80,7 @@ class BlockBuy(Strategy):
                 order_side=OrderSide.SELL
             )
             self.manager.add(self.id, self.trailing_stop_order)
-            print(f"BlockBuy strategy {self.id} has activated trailing stop.")
+            print(f"BlockBuy strategy {self.id} has activated trailing stop. At price: {price}, trail start price: {trail_start_price}. Trailing stop strategy id: {self.trailing_stop_order.id}.")
 
     def is_stop_loss_filled(self):
         if self.stop_loss_order is None:
