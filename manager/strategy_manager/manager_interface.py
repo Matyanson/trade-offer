@@ -1,5 +1,9 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
+
 from alpaca.data.models import Quote
+from strategy.model.strategy import Strategy
 
 
 class StrategyManagerInterface(ABC):
@@ -11,6 +15,26 @@ class StrategyManagerInterface(ABC):
         """
         pass
 
+    @abstractmethod
+    def get_children(self, strategy_id: str) -> list[str]:
+        """
+        Return the direct child strategy ids of a strategy.
+        """
+        pass
+
+    @abstractmethod
+    def get_parent(self, strategy_id: str) -> (str | None):
+        """
+        Return the parent strategy id for a strategy.
+        """
+        pass
+
+    @abstractmethod
+    def get_strategy(self, strategy_id: str) -> Strategy | None:
+        """
+        Return a strategy instance by id.
+        """
+        pass
 
     @abstractmethod
     def cancel(self, strategy_id: str):
@@ -18,13 +42,6 @@ class StrategyManagerInterface(ABC):
         Manually cancel a strategy.
         """
         pass
-
-    @abstractmethod
-    def update_budget(self, strategy_id):
-        """
-        Update the budget of a strategy and its parents.
-        """
-    pass
 
     @abstractmethod
     async def on_quote(self, quote: Quote):

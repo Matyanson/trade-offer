@@ -1,0 +1,51 @@
+app (MainManager):
+    OrderManager (listens to on_trade):
+        [events] on_trade (alpaca order event)
+        [relations] parent Strategy - Order - alpaca Order
+
+
+
+    StrategyMagager (listens to on_quote):
+        Strategy tree:
+            [events] on_quote (price change event)
+            [relations] Strategy - child Strategies
+
+
+events:
+
+    [Strategy] create a new order -> [OrderManager] saves relations -> [on_trade] alpaca order filled -> [StrategyManager] update budget for strategy and its parent stratregy ...
+    [on_quote] price change detected -> [StrategyMagager] trigger on_quote for all Strategies -> [Strategy] react to price change
+
+
+classes:
+    Order:
+        is a wrapper to the alpaca order. it is easier to work with and provides properties like possition_qty that alpaca order does not.
+        position_qty is derived from the on_trade event.
+        purpose: alpaca order wrapper, linked to the on_trade event (OrderManager)
+
+    Strategy:
+        should provide structure to implement any possible trading strategy (focus on the logic only not the overhead of alpaca api or management). it provides events like on_quote and on_budget_update for easy implementation.
+        every strategy can build on top of child Strategies or use Orders.
+        purpose: provide useful structure for strategy implementation. linked to the on_quote event (StrategyMagager).
+        currently, each Strategy implements update_budget on its own. however, I'm thinking it would be better if a manager did that and exposed on_budget_update. the manager would keep note all the Strategy child resources and update budget properties knowing which (id) child resource updated. For example out of 50 resources the one with id:some_id changed. we don't need to itterate over all of them.
+    
+    Budget:
+        both Orders and Strategies have:
+            budget_qty =        # total qty it can work with (should be a constant. But in the future version user can change it on the fly) (negative budget means budget for closing position, selling position)
+            available_qty =     # unspent qty (= budget - filled - reserved)
+            reserved_qty =      # qty that is reserved for pending orders (= budget - filled (for Orders))
+            position_qty =      # qty contribution of the total position we have (filled - fees) 
+            filled_qty = 0.0    # how much qty filled the order (can be partial)
+        I still havent decided if I should make it an interface.
+
+
+[StrategyMagager] update Strategy budget (id of the resource that updated):
+    problem: the first resource can be an Order or Strategy.
+
+    1) We save Strategies and Orders in the same place (StrategyManager tree).
+    - We go trough the tree to trigger the on_quote methods of Strategies. But Order doesn't have that... so if we make Order a child class of Strategy, we need to implement on_quote method even though we don't need it. Or we have to check every time if it is an Order or Strategy.
+    + We can store both types in one place and we can place Orders directly to the manager without having to wrap it up with a parent Strategy.
+
+    2) We save Strategies and Orders in different place.
+    - We need to check every time where it is stored to retrieve it using its id (Strategy tree or from OrderManager).
+    + We get to keep their purpose clear and separated.

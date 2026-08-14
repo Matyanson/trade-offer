@@ -40,7 +40,7 @@ class BlockBuy(Strategy):
         self.filled_entry_price = float(self.entry_order.alpaca_order.filled_avg_price)
 
         # 3) set a stop loss
-        entry_qty = self.entry_order.position_qty
+        entry_qty = self.entry_order.budget.position_qty
 
         self.stop_loss_order = StopOrder(
             symbol=self.symbol,
@@ -67,7 +67,7 @@ class BlockBuy(Strategy):
         if price >= trail_start_price:
             self.cancel_stop_loss()
 
-            qty = self.entry_order.position_qty
+            qty = self.entry_order.budget.position_qty
             self.trailing_stop_order = TrailingStopLoss(
                 manager=self.manager,
                 symbol=self.symbol,
@@ -84,36 +84,13 @@ class BlockBuy(Strategy):
         
         return self.stop_loss_order.state == OrderState.FINISHED
 
-    def update_budget(self):
-        # Update the budget distribution for the strategy and its orders
-        self.filled_qty = 0.0
-        self.position_qty = 0.0
-        self.reserved_qty = 0.0
-
-        if self.entry_order is not None:
-            self.filled_qty += self.entry_order.filled_qty
-            self.position_qty += self.entry_order.position_qty
-            self.reserved_qty += self.entry_order.reserved_qty
-
-        if self.stop_loss_order is not None:
-            self.filled_qty += self.stop_loss_order.filled_qty
-            self.position_qty += self.stop_loss_order.position_qty
-            self.reserved_qty += self.stop_loss_order.reserved_qty
-
-        if self.trailing_stop_order is not None:
-            self.filled_qty += self.trailing_stop_order.filled_qty
-            self.position_qty += self.trailing_stop_order.position_qty
-            self.reserved_qty += self.trailing_stop_order.reserved_qty
-
-        self.available_qty = self.budget_qty - self.filled_qty - self.reserved_qty
-
     def on_init(self):
         print("BlockBuy oninit called.")
         # 1) Place a buy order at a specific price
 
         self.entry_order = EntryBuy(
             symbol=self.symbol,
-            qty=self.budget_qty,
+            qty=self.budget.budget_qty,
             target_price=self.entry_price
         )
         self.manager.order.add(self.id, self.entry_order)

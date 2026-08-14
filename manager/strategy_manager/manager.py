@@ -2,6 +2,7 @@ from manager.strategy_manager.manager_interface import StrategyManagerInterface
 from strategy.model.strategy import Strategy, StrategyState
 from alpaca.data.models import Quote
 
+
 class StrategyManager(StrategyManagerInterface):
 
     def __init__(self):
@@ -16,6 +17,15 @@ class StrategyManager(StrategyManagerInterface):
         self.parents[strategy.id] = parent_id
         self.children.get(parent_id, []).append(strategy.id)
         self.children[strategy.id] = []
+
+    def get_children(self, strategy_id: str):
+        return list(self.children.get(strategy_id, []))
+
+    def get_parent(self, strategy_id: str):
+        return self.parents.get(strategy_id)
+
+    def get_strategy(self, strategy_id: str):
+        return self.strategies.get(strategy_id)
 
     # clean-up finished strategies
     def __remove(self, parent_id: str, strategy_id: str):
@@ -33,37 +43,15 @@ class StrategyManager(StrategyManagerInterface):
             return
 
         strategy.state = StrategyState.FINISHED
-        
+
         # TODO: strategy.cancel()
         pass
 
-    # update strategy budget for the given strategy_id
-    def update_budget(self, strategy_id):
-        strategy = self.strategies.get(strategy_id)
-        if strategy is None:
-            return
-
-        strategy.update_budget()
-    
-    # update strategy budget for all parents of the given strategy_id
-    def update_budget_parents(self, strategy_id):
-        for parent_id in self.itterate_parents(strategy_id):
-            self.update_budget(parent_id)
-
-
-    # traverse all parents from the given strategy_id up to the root
-    def itterate_parents(self, strategy_id: str):
-        current_id = strategy_id
-        while current_id != "root":
-            yield current_id
-            # find parent
-            current_id = self.parents.get(current_id, "root")
-    
     # traverse bottom-up
     def itterate_bottom_up(self, parent_id: str, strategy_id: str):
         for child_id in self.children.get(strategy_id, []):
             yield from self.itterate_bottom_up(strategy_id, child_id)
-        
+
         yield (parent_id, strategy_id)
 
     async def update_tree(self, quote: Quote):
@@ -73,17 +61,16 @@ class StrategyManager(StrategyManagerInterface):
             strategy = self.strategies.get(strategy_id)
             if strategy is None:
                 continue
-            
+
             # 1) Update all strategies with the new quote
             await strategy.on_quote(quote)
-            
+
             # 2) Clean-up finished strategies later
             if strategy.state == StrategyState.FINISHED:
                 finished.append((parent_id, strategy_id))
 
         return finished
 
-    
     async def on_quote(self, quote):
         print(f"Quote received: {quote.bid_price}-{quote.ask_price}, {quote.symbol} at {quote.timestamp}.")
         finished = await self.update_tree(quote)

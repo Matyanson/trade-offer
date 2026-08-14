@@ -3,6 +3,7 @@ from uuid import UUID
 from alpaca.trading.models import Order, OrderSide
 from enum import Enum
 from setup.trading import trading_client
+from strategy.model.budget import Budget
 
 class OrderState(Enum):
     PENDING = "pending"
@@ -17,11 +18,13 @@ class OrderInterface(ABC):
 
         self.id = f"{self.__class__.__name__}_{id(self)}"
         self.symbol = symbol
-        self.budget_qty = qty if order_side == OrderSide.BUY else -qty
-        self.available_qty = 0.0    # will always be 0.0 for orders because all budget is utilized in the order
-        self.reserved_qty = self.budget_qty
-        self.position_qty = 0.0
-        self.filled_qty = 0.0
+        self.budget = Budget(
+            budget_qty=qty if order_side == OrderSide.BUY else -qty,
+            available_qty=0.0,
+            reserved_qty=qty if order_side == OrderSide.BUY else -qty,
+            position_qty=0.0,
+            filled_qty=0.0,
+        )
 
         self.state = OrderState.PENDING
         self.alpaca_order = alpaca_order
@@ -45,20 +48,20 @@ class OrderInterface(ABC):
             filled_qty = -filled_qty
 
         # Update qty values
-        self.filled_qty = filled_qty
-        self.position_qty = position_qty
-        self.reserved_qty = self.budget_qty - self.filled_qty
+        self.budget.filled_qty = filled_qty
+        self.budget.position_qty = position_qty
+        self.budget.reserved_qty = self.budget.budget_qty - self.budget.filled_qty
 
         # Update the alpaca order reference
         self.alpaca_order = order
 
         # Update the order state based on filled quantity
-        if abs(self.filled_qty) >= abs(self.budget_qty):
+        if abs(self.budget.filled_qty) >= abs(self.budget.budget_qty):
             self.state = OrderState.FINISHED
         else:
             self.state = OrderState.ACTIVE
 
-        print(f"Order {self.id} updated state: {self.state}, budget_qty: {self.budget_qty}, filled_qty: {self.filled_qty}, position_qty: {self.position_qty}, reserved_qty: {self.reserved_qty}.")
+        print(f"Order {self.id} updated state: {self.state}, budget_qty: {self.budget.budget_qty}, filled_qty: {self.budget.filled_qty}, position_qty: {self.budget.position_qty}, reserved_qty: {self.budget.reserved_qty}.")
 
     def cancel(self):
         """

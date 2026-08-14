@@ -3,7 +3,7 @@ from alpaca.data.models import Quote
 
 
 class OrderManagerInterface(ABC):
-    
+
     @abstractmethod
     def add(self, order_id: str, order):
         """
@@ -11,6 +11,12 @@ class OrderManagerInterface(ABC):
         """
         pass
 
+    @abstractmethod
+    def get_orders_for_strategy(self, strategy_id: str):
+        """
+        Return all orders belonging to the given strategy.
+        """
+        pass
 
     @abstractmethod
     async def on_trade_update(self, quote: Quote):

@@ -14,6 +14,7 @@ class OrderManager(OrderManagerInterface):
         self.last_position_qty: float = 0.0
         # alpaca order id -> (parent strategy id, order)
         self.orders: dict[str, tuple[str, OrderInterface]] = {}
+        self.orders_by_strategy: dict[str, list[OrderInterface]] = {}
         print("OrderManager initialized.")
 
     def add(self, parent_strategy_id: str, order: OrderInterface):
@@ -21,7 +22,11 @@ class OrderManager(OrderManagerInterface):
         Add a new order to the manager.
         """
         self.orders[str(order.alpaca_order.id)] = (parent_strategy_id, order)
+        self.orders_by_strategy.setdefault(parent_strategy_id, []).append(order)
         print(f"Order {order.alpaca_order.id} / {order.id} added to the manager under strategy {parent_strategy_id}.")
+
+    def get_orders_for_strategy(self, strategy_id: str):
+        return list(self.orders_by_strategy.get(strategy_id, []))
 
     def update(self, alpaca_order_id: str):
         """
@@ -50,7 +55,6 @@ class OrderManager(OrderManagerInterface):
         """
         alpaca_order_id = str(data.order.id)
         total_position_qty = float(data.position_qty)
-        
 
         if alpaca_order_id not in self.orders:
             print(f"Order {alpaca_order_id} not found in the manager!!!")
@@ -60,19 +64,18 @@ class OrderManager(OrderManagerInterface):
             return
 
         parent_strategy_id, order = self.orders[alpaca_order_id]
-        
+
         # calculate position_qty of the order
         # positive = buy, negative = sell
         order_position_qty = self._get_order_position_qty(total_position_qty)
-        
+
         # update last_position_qty
         self.last_position_qty = total_position_qty
 
         # update the order and strategy budget
         order.update_filled_qty(data.order, order_position_qty)
         print(f"Order {order.id} position quantity updated to {order_position_qty}.")
-        self.manager.strategy.update_budget(parent_strategy_id)
-
+        self.manager.budget.update_budget(parent_strategy_id)
 
     async def on_trade_update(self, data: TradeUpdate):
         """

@@ -27,12 +27,12 @@ class TrailingStopLoss(Strategy):
         stop_price = self.get_stop_price(quote)
         self.trailing_stop_order = StopOrder(
             symbol=self.symbol,
-            qty=self.budget_qty,
+            qty=self.budget.budget_qty,
             stop_price=stop_price,
             side=self.order_side
         )
         self.manager.order.add(self.id, self.trailing_stop_order)
-        print(f"{self.name}: Placed entry order for {self.symbol} at stop price: {stop_price}, quantity: {self.budget_qty}")
+        print(f"{self.name}: Placed entry order for {self.symbol} at stop price: {stop_price}, quantity: {self.budget.budget_qty}")
 
     def move_trailing_stop(self, quote: Quote):
         if self.trailing_stop_order is None:
@@ -57,20 +57,6 @@ class TrailingStopLoss(Strategy):
     
     def on_init(self):
         return super().on_init()
-
-    def update_budget(self):
-        # Update the budget distribution for the strategy and its orders
-        self.filled_qty = 0.0
-        self.position_qty = 0.0
-        self.reserved_qty = 0.0
-
-        if self.trailing_stop_order is not None:
-            self.available_qty = self.trailing_stop_order.available_qty
-            self.reserved_qty = self.trailing_stop_order.reserved_qty
-            self.position_qty = self.trailing_stop_order.position_qty
-            self.filled_qty = self.trailing_stop_order.filled_qty
-        
-        self.available_qty = self.budget_qty - self.filled_qty - self.reserved_qty
 
     async def on_quote(self, quote):
         if self.state == StrategyState.FINISHED:

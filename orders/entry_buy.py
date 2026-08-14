@@ -29,7 +29,7 @@ class EntryBuy(OrderInterface):
             # place a new order with updated parameters
             self.alpaca_order = buy_at_price(
                 symbol=self.symbol,
-                qty=self.budget_qty,
+                qty=self.budget.budget_qty,
                 time_in_force=TimeInForce.GTC,
                 entry_price=self.target_price
             )

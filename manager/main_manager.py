@@ -3,6 +3,7 @@ from threading import Thread
 from manager.main_manager_interface import MainManagerInterface
 from manager.strategy_manager.manager import StrategyManager
 from manager.order_manager.manager import OrderManager
+from manager.budget_manager import BudgetManager
 from setup.stream import crypto_stream
 from setup.stream import trading_stream
 
@@ -13,6 +14,7 @@ class MainManager(MainManagerInterface):
         # 1) init managers
         self.strategy = StrategyManager()
         self.order = OrderManager(self)
+        self.budget = BudgetManager(self)
 
         # 2) setup event listeners
         crypto_stream.subscribe_quotes(

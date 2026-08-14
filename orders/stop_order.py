@@ -43,7 +43,7 @@ class StopOrder(OrderInterface):
         self.alpaca_order = trading_client.submit_order(
             order_data=StopLimitOrderRequest(
                 symbol=self.symbol,
-                qty=abs(self.budget_qty),
+                qty=abs(self.budget.budget_qty),
                 stop_price=self.stop_price,
                 limit_price=self.limit_price,
                 side=self.side,
