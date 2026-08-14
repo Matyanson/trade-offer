@@ -19,6 +19,12 @@ class StrategyManagerInterface(ABC):
         """
         pass
 
+    @abstractmethod
+    def update_budget(self, strategy_id):
+        """
+        Update the budget of a strategy and its parents.
+        """
+    pass
 
     @abstractmethod
     async def on_quote(self, quote: Quote):

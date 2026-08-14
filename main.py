@@ -1,21 +1,33 @@
-from manager.manager import StrategyManager
-from setup.stream import crypto_stream
-from alpaca.trading.enums import OrderSide
-from strategy.block_buy import BlockBuy
-from strategy.basic.trailing_stop_loss import TrailingStopLoss
+from time import sleep
 
+from manager.main_manager import MainManager
+from strategy.block_buy import BlockBuy
+from setup.market_data import stock_client, crypto_client
+from alpaca.data.requests import StockLatestQuoteRequest
+from threading import Event
+from datetime import datetime
+print(datetime.now())
+
+def get_current_ask_price(symbol):
+    # Get current market price
+    quote = crypto_client.get_crypto_latest_quote(
+        StockLatestQuoteRequest(symbol_or_symbols=symbol)
+    )[symbol]
+
+    return quote.ask_price
 
 # 1) init manager
-manager = StrategyManager()
+manager = MainManager()
+manager.run()
+sleep(2)  # Wait for streams to start
 
-# 2) setup event listener for crypto quotes
-crypto_stream.subscribe_quotes(
-    manager.on_quote,
-    "BTC/USD"
-)
+# 2) add a strategy to the manager
+latest_price = get_current_ask_price("BTC/USD")
+strategy = BlockBuy(manager, "BTC/USD", 0.001, latest_price, 50.0, 20.0)
+manager.strategy.add("root", strategy)
 
-# 3) add a strategy to the manager
-strategy = BlockBuy(manager, "BTC/USD", 0.001, 64_200.0, 100.0, 50.0)
-manager.add("root", strategy)
-
-crypto_stream.run()
+# Keep application alive
+try:
+    Event().wait()
+except KeyboardInterrupt:
+    print("Shutting down...")
