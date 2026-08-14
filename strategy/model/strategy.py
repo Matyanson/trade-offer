@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from enum import Enum
 
 from alpaca.data.models import Quote
-from manager.manager_interface import StrategyManagerInterface
+from manager.main_manager_interface import MainManagerInterface
 
 
 class StrategyState(Enum):
@@ -17,18 +17,24 @@ class StrategyState(Enum):
 class Strategy(ABC):
     def __init__(
         self,
-        manager: StrategyManagerInterface,
+        manager: MainManagerInterface,
         symbol: str,
         qty: float,
     ):
         self.manager = manager
         self.name = self.__class__.__name__
-        self.symbol = symbol
-        self.qty = qty
-
         self.id = f"{self.name}_{id(self)}"
+        self.symbol = symbol
+
+        self.budget_qty = qty
+        self.available_qty = qty
+        self.reserved_qty = 0.0
+        self.position_qty = 0.0
+        self.filled_qty = 0.0
+
         self.state = StrategyState.PENDING
         self.on_init()
+
 
     @abstractmethod
     def on_init(self):
@@ -44,6 +50,12 @@ class Strategy(ABC):
         """
         pass
 
+    @abstractmethod
+    def update_budget(self):
+        """
+        Called when the strategy's budget distribution needs to be updated.
+        """
+        pass
     
 
     
