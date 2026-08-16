@@ -40,7 +40,8 @@ class StopOrder(OrderInterface):
 
         # place a new order with updated parameters
         self.limit_price = self._get_limit_price(self.side)
-        self.alpaca_order = trading_client.submit_order(
+        self.alpaca_order = trading_client.replace_order_by_id(
+            order_id=self.alpaca_order.id,
             order_data=StopLimitOrderRequest(
                 symbol=self.symbol,
                 qty=abs(self.budget.budget_qty),

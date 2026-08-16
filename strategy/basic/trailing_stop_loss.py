@@ -53,26 +53,26 @@ class TrailingStopLoss(Strategy):
         if self.trailing_stop_order is None:
             return False
         
-        return self.trailing_stop_order.state == OrderState.ACTIVE
+        return self.trailing_stop_order.state == OrderState.ACTIVE or self.trailing_stop_order.state == OrderState.FINISHED
     
     def on_init(self):
         return super().on_init()
 
     async def on_quote(self, quote):
-        if self.state == StrategyState.FINISHED:
-            return  # No further action needed
+        match self.state:
+            case StrategyState.PENDING:
+                self.place_entry_order(quote)
+                self.state = StrategyState.ACTIVE
+                return
 
-        # 0) Place the entry order
-        if self.trailing_stop_order is None:
-            self.place_entry_order(quote)
-            return
-        
-        elif self.is_stop_loss_filled():
-            self.state = StrategyState.FINISHED
-            print(f"{self.name}: Trailing stop loss filled for {self.symbol}. Strategy is now FINISHED.")
-            return
-
-        else:
-            # 1) manually modify the stop loss order if the price has moved up
-            self.move_trailing_stop(quote)
+            case StrategyState.ACTIVE:
+                if self.is_stop_loss_filled():
+                    self.state = StrategyState.FINISHED
+                    print(f"{self.name}: Trailing stop loss filled for {self.symbol}. Strategy is now FINISHED.")
+                    return
+                else:
+                    # Move the trailing stop if necessary
+                    self.move_trailing_stop(quote)
+            case StrategyState.FINISHED:
+                return  # No further action needed
         
