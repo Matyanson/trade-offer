@@ -45,7 +45,7 @@ class TrailingStopLoss(Strategy):
             self.order_side == OrderSide.BUY and stop_price < previous_stop_price):
             # Move the trailing stop up/down for a sell order
             self.trailing_stop_order.stop_price = stop_price
-            self.manager.order.update(str(self.trailing_stop_order.alpaca_order.id))
+            self.manager.order.update(self.trailing_stop_order)
 
             print(f"{self.name}: Moved trailing stop up/down for {self.symbol} to stop price: {stop_price}")
     

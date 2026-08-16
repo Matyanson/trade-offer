@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from alpaca.data.models import Quote
 
+from orders.model.order_interface import OrderInterface
+
 
 class OrderManagerInterface(ABC):
 
@@ -8,6 +10,12 @@ class OrderManagerInterface(ABC):
     def add(self, order_id: str, order):
         """
         Add an order to the manager.
+        """
+        pass
+
+    def update(self, order: OrderInterface):
+        """
+        Update an order in the manager.
         """
         pass
 

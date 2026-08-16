@@ -28,10 +28,11 @@ class OrderManager(OrderManagerInterface):
     def get_orders_for_strategy(self, strategy_id: str):
         return list(self.orders_by_strategy.get(strategy_id, []))
 
-    def update(self, alpaca_order_id: str):
+    def update(self, order: OrderInterface):
         """
         Update the order in the manager with the latest data from Alpaca.
         """
+        alpaca_order_id = str(order.alpaca_order.id)
         if alpaca_order_id not in self.orders:
             print(f"Order {alpaca_order_id} not found in the manager!!!")
             return
