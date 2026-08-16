@@ -26,3 +26,23 @@ class StopLimit(OrderInterface):
             )
         )
         super().__init__(symbol, qty, self.stop_loss_order)
+
+    def update(self):
+        """
+        Replace the order with a new one (updating the stop price, limit price, etc.)
+        """ 
+
+        # place a new order with updated parameters
+        self.stop_loss_order = trading_client.replace_order_by_id(
+            order_id=self.stop_loss_order.id,
+            order_data=StopLimitOrderRequest(
+                symbol=self.symbol,
+                qty=abs(self.budget.budget_qty),
+                stop_price=self.stop_price,
+                limit_price=self.limit_price,
+                side=self.side,
+                time_in_force=TimeInForce.GTC
+            )
+        )
+
+        return self.stop_loss_order.id

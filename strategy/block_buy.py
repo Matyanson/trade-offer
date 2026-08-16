@@ -12,8 +12,6 @@ from alpaca.trading.requests import StopLimitOrderRequest, StopOrderRequest, Tra
 from alpaca.trading.models import Order
 from alpaca.data.models import Quote
 
-from strategy.utils.entry import buy_at_price
-
 class BlockBuy(Strategy):
     def __init__(self, manager: MainManager, symbol: str, qty: float, entry_price: float, stop_loss_distance: float, trail_start_distance: float):
         self.entry_price: float = entry_price
@@ -37,7 +35,9 @@ class BlockBuy(Strategy):
         self.state = StrategyState.ACTIVE
         print(f"BlockBuy strategy {self.id} is now ACTIVE.")
         print(f"BlockBuy strategy {self.id} entry filled at price: {self.entry_order.alpaca_order.filled_avg_price}.")
+
         self.filled_entry_price = float(self.entry_order.alpaca_order.filled_avg_price)
+        print(f"BlockBuy (bid) {self.filled_entry_price - self.stop_loss_distance} : {self.filled_entry_price} : {self.filled_entry_price + self.trail_start_distance}")
 
         # 3) set a stop loss
         entry_qty = self.entry_order.budget.position_qty
@@ -55,8 +55,8 @@ class BlockBuy(Strategy):
         if self.stop_loss_order is not None:
             try:
                 self.stop_loss_order.cancel()
-                self.stop_loss_order = None
                 print(f"BlockBuy strategy {self.id} stop loss order {self.stop_loss_order.id} canceled.")
+                self.stop_loss_order = None
             except Exception as e:
                 print(f"Error occurred while canceling stop loss order: {e}")
 
@@ -82,7 +82,9 @@ class BlockBuy(Strategy):
         if self.stop_loss_order is None:
             return False
         
-        return self.stop_loss_order.state == OrderState.FINISHED
+        if self.stop_loss_order.state == OrderState.FINISHED:
+            print(f"BlockBuy strategy {self.id} stop loss order {self.stop_loss_order.id} has been filled at price: {self.stop_loss_order.alpaca_order.filled_avg_price}.")
+            return True
 
     def on_init(self):
         print("BlockBuy oninit called.")
