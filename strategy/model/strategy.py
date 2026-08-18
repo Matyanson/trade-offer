@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from alpaca.data.models import Quote
 from strategy.model.budget import Budget
+from strategy.model.pnl import Pnl
 
 if TYPE_CHECKING:
     from manager.main_manager_interface import MainManagerInterface
@@ -36,6 +37,8 @@ class Strategy(ABC):
             position_qty=0.0,
             filled_qty=0.0,
         )
+
+        self.pnl = Pnl()
 
         self.state = StrategyState.PENDING
         self.on_init()

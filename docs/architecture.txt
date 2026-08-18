@@ -9,11 +9,15 @@ app (MainManager):
         Strategy tree:
             [events] on_quote (price change event)
             [relations] Strategy - child Strategies
+    
+    BudgetManager:
+        [events] update_budget
+
 
 
 events:
 
-    [Strategy] create a new order -> [OrderManager] saves relations -> [on_trade] alpaca order filled -> [StrategyManager] update budget for strategy and its parent stratregy ...
+    [Strategy] create a new order -> [OrderManager] saves relations -> [on_trade] alpaca order filled -> [StrategyManager] update_budget -> [BudgetManager] update budget and pnl for strategy and its parent stratregies
     [on_quote] price change detected -> [StrategyMagager] trigger on_quote for all Strategies -> [Strategy] react to price change
 
 
@@ -36,16 +40,10 @@ classes:
             reserved_qty =      # qty that is reserved for pending orders (= budget - filled (for Orders))
             position_qty =      # qty contribution of the total position we have (filled - fees) 
             filled_qty = 0.0    # how much qty filled the order (can be partial)
-        I still havent decided if I should make it an interface.
+    Pnl:
+        each strategy has:
+            total_cost_opened =     # sum of (position_qty * avg_filled_price) of all children resources (that opened a position)
+            total_qty_opened =      # sum of position_qty of all children resources (that opened a position)
+            total_cost_closed =     # sum of (position_qty * avg_filled_price) of all children resources (that closed a position)
+            total_qty_closed =      # sum of position_qty of all children resources (that closed a position)
 
-
-[StrategyMagager] update Strategy budget (id of the resource that updated):
-    problem: the first resource can be an Order or Strategy.
-
-    1) We save Strategies and Orders in the same place (StrategyManager tree).
-    - We go trough the tree to trigger the on_quote methods of Strategies. But Order doesn't have that... so if we make Order a child class of Strategy, we need to implement on_quote method even though we don't need it. Or we have to check every time if it is an Order or Strategy.
-    + We can store both types in one place and we can place Orders directly to the manager without having to wrap it up with a parent Strategy.
-
-    2) We save Strategies and Orders in different place.
-    - We need to check every time where it is stored to retrieve it using its id (Strategy tree or from OrderManager).
-    + We get to keep their purpose clear and separated.

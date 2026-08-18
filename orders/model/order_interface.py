@@ -27,6 +27,7 @@ class OrderInterface(ABC):
 
         self.state = OrderState.PENDING
         self.alpaca_order = alpaca_order
+        self.filled_avg_price: float | None = None
 
     @abstractmethod
     def update(self) -> UUID:
@@ -37,14 +38,17 @@ class OrderInterface(ABC):
         """
         pass
 
-    def update_filled_qty(self, order: Order, position_qty: float):
+    def update_filled_qty(self, alpaca_order: Order, position_qty: float):
         """
         Update the order's filled quantity based on the latest trade event.
         """
-        order_side = order.side
-        filled_qty = float(order.filled_qty)
+        order_side = alpaca_order.side
+        filled_qty = float(alpaca_order.filled_qty)
         if order_side == OrderSide.SELL:
             filled_qty = -filled_qty
+
+        filled_avg_price = alpaca_order.filled_avg_price
+        self.filled_avg_price = float(filled_avg_price) if filled_avg_price is not None else None
 
         # Update qty values
         self.budget.filled_qty = filled_qty
@@ -52,7 +56,7 @@ class OrderInterface(ABC):
         self.budget.reserved_qty = self.budget.budget_qty - self.budget.filled_qty
 
         # Update the alpaca order reference
-        self.alpaca_order = order
+        self.alpaca_order = alpaca_order
 
         # Update the order state based on filled quantity
         if abs(self.budget.filled_qty) >= abs(self.budget.budget_qty):

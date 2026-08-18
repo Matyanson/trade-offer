@@ -72,7 +72,7 @@ class StrategyManager(StrategyManagerInterface):
         return finished
 
     async def on_quote(self, quote):
-        print(f"Quote received: {quote.bid_price}-{quote.ask_price}, {quote.symbol} at {quote.timestamp}.")
+        # print(f"Quote received: {quote.bid_price}-{quote.ask_price}, {quote.symbol} at {quote.timestamp}.")
         finished = await self.update_tree(quote)
 
         # Clean-up step
