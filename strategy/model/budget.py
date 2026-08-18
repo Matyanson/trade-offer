@@ -13,6 +13,10 @@ class Budget:
         return self.budget_qty - self.filled_qty - self.reserved_qty
     available_qty = property(get_available_qty)
 
+    @classmethod
+    def zero(cls) -> "Budget":
+        return cls(0.0, 0.0, 0.0, 0.0, 0.0)
+
     def copy(self):
         return Budget(
             budget_qty=self.budget_qty,
@@ -21,9 +25,6 @@ class Budget:
             position_qty=self.position_qty,
             filled_qty=self.filled_qty,
         )
-
-    def zero(self):
-        return Budget(0.0, 0.0, 0.0, 0.0, 0.0)
 
     def add(self, other: "Budget"):
         return Budget(

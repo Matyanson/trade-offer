@@ -7,12 +7,13 @@ from orders.model.order_interface import OrderInterface
 class OrderManagerInterface(ABC):
 
     @abstractmethod
-    def add(self, order_id: str, order):
+    def add(self, order_id: str, order: OrderInterface):
         """
         Add an order to the manager.
         """
         pass
 
+    @abstractmethod
     def update(self, order: OrderInterface):
         """
         Update an order in the manager.
@@ -20,7 +21,7 @@ class OrderManagerInterface(ABC):
         pass
 
     @abstractmethod
-    def get_orders_for_strategy(self, strategy_id: str):
+    def get_orders_for_strategy(self, strategy_id: str) -> list[OrderInterface]:
         """
         Return all orders belonging to the given strategy.
         """
