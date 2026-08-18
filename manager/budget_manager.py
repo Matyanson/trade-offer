@@ -42,7 +42,6 @@ class BudgetManager:
         child_total = self._aggregate_child_budget(strategy_id)
         if child_total is not None:
             strategy.budget = child_total.copy()
-            strategy.budget.available_qty = strategy.budget.budget_qty - strategy.budget.filled_qty - strategy.budget.reserved_qty
 
         current = self.strategy_manager.get_parent(strategy_id)
         while current is not None:
@@ -53,5 +52,4 @@ class BudgetManager:
             parent_total = self._aggregate_child_budget(current)
             if parent_total is not None:
                 parent_strategy.budget = parent_total.copy()
-                parent_strategy.budget.available_qty = parent_strategy.budget.budget_qty - parent_strategy.budget.filled_qty - parent_strategy.budget.reserved_qty
             current = self.strategy_manager.get_parent(current)

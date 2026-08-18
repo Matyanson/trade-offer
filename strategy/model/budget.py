@@ -4,10 +4,14 @@ from dataclasses import dataclass
 @dataclass
 class Budget:
     budget_qty: float
-    available_qty: float
+    _available_qty: float
     reserved_qty: float
     position_qty: float
     filled_qty: float
+
+    def get_available_qty(self) -> float:
+        return self.budget_qty - self.filled_qty - self.reserved_qty
+    available_qty = property(get_available_qty)
 
     def copy(self):
         return Budget(
