@@ -20,7 +20,6 @@ class OrderInterface(ABC):
         self.symbol = symbol
         self.budget = Budget(
             budget_qty=qty if order_side == OrderSide.BUY else -qty,
-            available_qty=0.0,
             reserved_qty=qty if order_side == OrderSide.BUY else -qty,
             position_qty=0.0,
             filled_qty=0.0,

@@ -32,7 +32,6 @@ class Strategy(ABC):
 
         self.budget = Budget(
             budget_qty=qty,
-            available_qty=qty,
             reserved_qty=0.0,
             position_qty=0.0,
             filled_qty=0.0,
